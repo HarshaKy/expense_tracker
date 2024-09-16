@@ -12,6 +12,7 @@ class _NewExpenseState extends State<NewExpense> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
   DateTime? _date;
+  Category _category = Category.leisure;
 
   void _datePicker() async {
     final selectedDate = await showDatePicker(
@@ -23,6 +24,31 @@ class _NewExpenseState extends State<NewExpense> {
     setState(() {
       _date = selectedDate;
     });
+  }
+
+  void _addExpense() {
+    final amount = double.tryParse(_amountController.text);
+    final isAmountValid = amount != null && amount > 0;
+    if (_titleController.text.trim().isEmpty ||
+        !isAmountValid ||
+        _date == null) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Invalid Input'),
+          content: const Text('Please enter proper values.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+              },
+              child: const Text('Okay'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
   }
 
   @override
@@ -79,13 +105,33 @@ class _NewExpenseState extends State<NewExpense> {
               ),
             ],
           ),
+          const SizedBox(height: 16),
           Row(
             children: [
-              ElevatedButton(
-                onPressed: () {
-                  print(_titleController.text);
-                  print(_amountController.text);
+              DropdownButton(
+                value: _category,
+                items: Category.values
+                    .map(
+                      (category) => DropdownMenuItem(
+                        value: category,
+                        child: Text(
+                          category.name.toUpperCase(),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value == null) {
+                    return;
+                  }
+                  setState(() {
+                    _category = value;
+                  });
                 },
+              ),
+              const Spacer(),
+              ElevatedButton(
+                onPressed: _addExpense,
                 child: const Text('Save Expense'),
               ),
               TextButton(
